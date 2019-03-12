@@ -9,8 +9,9 @@ import datetime
 DEBUG = True
 POSSIBLE_CAMERAS = 1
 
-DISTANCE = 2
+DISTANCE = 1
 
+path_for_pictures = "./pictures_for_analysis/"
 face_landmark_path = './shape_predictor_68_face_landmarks.dat'
 
 K = [6.5308391993466671e+002, 0.0, 3.1950000000000000e+002,
@@ -122,7 +123,7 @@ def save_frame_as_picture(frame):
     # example: raw_timestamp -> 2019-03-12 08:14:47.501562
     timestamp = str(raw_timestamp).split(".")[0].replace("-", "").replace(" ", "").replace(":", "")
 
-    cv2.imwrite(timestamp + ".jpg", frame)
+    cv2.imwrite(path_for_pictures + timestamp + ".jpg", frame)
 
     if DEBUG:
         print("saved photo with timestamp:" + str(timestamp) + ".jpg")
