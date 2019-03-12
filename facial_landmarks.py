@@ -4,6 +4,12 @@ import numpy as np
 from imutils import face_utils
 import json
 import math
+import datetime
+
+DEBUG = True
+POSSIBLE_CAMERAS = 1
+
+DISTANCE = 2
 
 face_landmark_path = './shape_predictor_68_face_landmarks.dat'
 
@@ -64,72 +70,144 @@ def get_head_pose(shape):
     return reprojectdst, euler_angle
 
 
+def get_available_cameras():
+
+    cameras = []
+
+    for index_for_camera in range(0, POSSIBLE_CAMERAS):
+
+        try:
+            # trying to connect to camera with specific index
+            camera = cv2.VideoCapture(index_for_camera)
+
+            # append to available cameras
+            if camera:
+                print("got camera: " + str(camera))
+                cameras.append(camera)
+
+        except Exception as error:
+            if DEBUG:
+                print(error)
+
+    # returning the available cameras
+    return cameras
+
+
+# default cameras:
+    # index == 0 -> the computer camera
+    # index == 1 -> external camera
+    # index > 1 -> other cameras -> we will not implement more than one camera BUT SUPPORTED
+def get_default_camera(cameras, index_for_camera=0, external=False):
+
+    if len(cameras) == 0:
+        return None
+
+    if len(cameras) == 1 and not external:
+        return cameras[index_for_camera]
+
+    if len(cameras) == 1 and external:
+        return None
+
+    if len(cameras) > 1 and not external:
+        return cameras[index_for_camera]
+
+    if external:
+        return cameras[index_for_camera]
+
+
+def save_frame_as_picture(frame):
+
+    raw_timestamp = datetime.datetime.now()
+
+    # example: raw_timestamp -> 2019-03-12 08:14:47.501562
+    timestamp = str(raw_timestamp).split(".")[0].replace("-", "").replace(" ", "").replace(":", "")
+
+    cv2.imwrite(timestamp + ".jpg", frame)
+
+    if DEBUG:
+        print("saved photo with timestamp:" + str(timestamp) + ".jpg")
+
+
 def main():
     # return
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        print("Unable to connect to camera.")
-        return
+
+    external = False
+
+    # getting all available cameras that are connected to the compute stick
+    cameras = get_available_cameras()
+
+    # getting the camera we want to use -> default => the computer camera
+    # to get the external camera you can add True parameter to this function and also select the number of the camera
+    # if you do not specific any index/external parameter -> will get the default one (computer)
+    # example: cap = get_default_camera(cameras, 1, True)
+    cap = get_default_camera(cameras, external)
+
+    # if the external param is True -> cap might be equal to [] if the function cant find a connected camera
+    if (cap is None) or (not cap.isOpened()):
+        print(cap)
+        print("Unable to find camera.")
+        return ["NO_CAMERAS"]
+
+    # init the detector
     detector = dlib.get_frontal_face_detector()
+
+    # init the predictor
     predictor = dlib.shape_predictor(face_landmark_path)
 
+    # init an array for the points we will find
     points = [] # tuples (x,y)
-    index = 1000
+
+    # index when we will take the frame and get the emotions from the picture
+    index = 1
     while cap.isOpened():
+
         index += 1
-        if index%1000 != 0:
-            continue
+
         ret, frame = cap.read()
+
+        # after 1000 frames we are saving one photo
+        if index % 5 == 0:
+            save_frame_as_picture(frame)
+
+        # getting the width and height from the video
         width = cap.get(3)
         height = cap.get(4)
-        print(width)
-        print(height)
+
+        if DEBUG:
+            print(width)
+            print(height)
+
+        # we are still getting video from the camera
         if ret:
+
+            # getting the face rectangle from the frame
             face_rects = detector(frame, 0)
 
+            # if we found some face/s in the frame
             if len(face_rects) > 0:
+
+                # start to analyse the face/s in the frame
                 for face in face_rects:
                     shape = predictor(frame, face)
                     shape = face_utils.shape_to_np(shape)
 
+                    # estimate the head pose of the specific face
                     reprojectdst, euler_angle = get_head_pose(shape)
                     #print(reprojectdst)
 
+                    # draw points for the face
                     for (x, y) in shape:
                         cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
 
-                    looking_x_end = 0
-                    looking_y_start = 0
-                    looking_y_end = 0
-                    looking_x_start = 0
-                    # for start, end in line_pairs:
-                    #     if start == 1 and end == 2:
-                    #         looking_y_start = reprojectdst[start][1] + (reprojectdst[end][1] - reprojectdst[start][1])/2
-                    #         cv2.line(frame, reprojectdst[start], reprojectdst[end], (255, 255, 0))
-                    #     if start == 2 and end == 6:
-                    #         looking_x_start = reprojectdst[start][0] + (reprojectdst[end][0] - reprojectdst[start][0]) / 2
-                    #         cv2.line(frame, reprojectdst[start], reprojectdst[end], (0, 0, 255))
-                    #     if start == 3 and end == 0:
-                    #         looking_y_end = reprojectdst[start][1] + (reprojectdst[end][1] - reprojectdst[start][1])/2
-                    #         cv2.line(frame, reprojectdst[start], reprojectdst[end], (255, 255, 0))
-                    #     if start == 3 and end == 7:
-                    #         looking_x_end = reprojectdst[start][0] + (reprojectdst[end][0] - reprojectdst[start][0])/2
-                    #         cv2.line(frame, reprojectdst[start], reprojectdst[end], (255, 255, 0))
-                    #     else:
-                    #         cv2.line(frame, reprojectdst[start], reprojectdst[end], (0, 0, 255))
-                        # if looking_y_start!=0 and looking_x_start!=0 and looking_y_end!=0 and looking_x_end!=0:
-                        #     cv2.line(frame, (int(looking_x_start), int(looking_y_start)), (int(looking_x_end), int(looking_y_end)), (255, 255, 0))
-                            #cv2.circle(frame, (int(looking_x_start), int(looking_y_start)), 3,(255, 255, 0),2)
-                            #cv2.circle(frame, (int(looking_x_end), int(looking_y_end)), 3, (255, 255, 0), 2)
-
-                    #math.sin()
-                    dist = 1
-                    x = width/2 - int((euler_angle[1, 0]/30)*(width/2)*(dist)) # the 30 parameter should be the angel up and down of the camera
-                    y = height/2 + int((euler_angle[0, 0]/30)*(height/2)*(dist))
+                    x = width/2 - int((euler_angle[1, 0]/30)*(width/2)*(DISTANCE)) # the 30 parameter should be the angel up and down of the camera
+                    y = height/2 + int((euler_angle[0, 0]/30)*(height/2)*(DISTANCE))
                     print(euler_angle)
                     cv2.circle(frame, (int(x), int(y)), 3, (10, 20, 20), 2)
                     points.append((x,y))
-                    print("x: " + str(x) + ", y: " + str(y))
+
+                    if DEBUG:
+                        print("x: " + str(x) + ", y: " + str(y))
+
                     with open("./points.json", "r") as json_file:
                         values = json.load(json_file)
                         results = values['results']
@@ -137,32 +215,19 @@ def main():
                         to_json_results = {"results": new_results}
                         with open("./points.json", "w") as json_file:
                             json.dump(to_json_results, json_file)
-                            print("updated json file")
+
+                            if DEBUG:
+                                print("updated json file")
 
             cv2.imshow("demo", frame)
             array_list = []
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 for (x, y) in points:
                     array_list = insert_x_y(x,y, array_list)
-                print(array_list)
-                # for l in array_list:
-                #     print("x: " + str(l[0]) + ", y: " + str(l[1]) + ", value: " + str(l[2]) + "\n")
 
-                # painting the picture
-                # import paint_points
-                # img = paint_points.start_painting(array_list)
-
-                #json_values = {temp_values}
-                # writing the points into the json file
-                # with open("./points.json", "w") as json_file:
-                #     to_json = {"results": array_list}
-                #     json.dump(to_json, json_file)
-
-                # showing the image with points
-                # cv2.imshow("image", img)
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows()
+                array_list = finilize_to_send(array_list)
                 break
+
 
 def insert_x_y(x,y, array_list):
     entered = False
@@ -176,6 +241,7 @@ def insert_x_y(x,y, array_list):
         array_list = check_close_pixel([x,y,1], array_list)
     return array_list
 
+
 def check_close_pixel(pxl, array_list):
     dist_to_pixel = 10
     found = False
@@ -188,6 +254,21 @@ def check_close_pixel(pxl, array_list):
     if not found:
         array_list.append({"x": pxl[0], "y": pxl[1], "value": pxl[2], "radius": 40})
     return array_list
+
+
+
+def finilize_to_send(list_to_order):
+
+    return list_to_order.sort(key=get_value)
+
+
+def get_value(object):
+
+    if (not object) or (object is None):
+        return 0
+    return object['value']
+
+
 
 
 if __name__ == '__main__':
