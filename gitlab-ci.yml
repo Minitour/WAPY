@@ -1,0 +1,24 @@
+stages:
+  - build
+  - deploy
+
+update_files:
+  stage: build
+  variables:
+    ACTIVE_MACHINES: 'docker-machine active'
+  script:
+    - 'docker-machine ssh $ACTIVE_MACHINES git clone $PATH_TO_GIT_REPO'
+  only:
+    refs:
+      - master
+
+
+update_image:
+  stage: deploy
+  variables:
+    ACTIVE_MACHINES: 'docker-machine active'
+  script:
+    - 'docker-machine ssh $ACTIVE_MACHINES "docker build -f dockerfile"'
+  only:
+    refs:
+      - master
