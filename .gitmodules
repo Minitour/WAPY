@@ -1,0 +1,18 @@
+[submodule "wapy-calibration-service"]
+	path = wapy-calibration-service
+	url = https://github.com/Minitour/wapy-calibration-service.git
+[submodule "wapy-app-ios"]
+	path = wapy-app-ios
+	url = https://github.com/Minitour/wapy-app-ios.git
+[submodule "wapy-app-web"]
+	path = wapy-app-web
+	url = https://github.com/Minitour/wapy-web-app.git
+[submodule "wapy-camera-service"]
+	path = wapy-camera-service
+	url = https://github.com/Minitour/wapy-camera-service
+[submodule "wapy-cloud-functions"]
+	path = wapy-cloud-functions
+	url = https://github.com/Minitour/wapy-cloud-functions
+[submodule "wapy-backend"]
+	path = wapy-backend
+	url = https://github.com/Minitour/wapy-backend.git
