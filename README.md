@@ -20,3 +20,9 @@
 - **Frontend:** For the frontend we decided to go with the `Angular 6` framework, which we will build using Typescript, HTML, and SCSS. In addition to Angular, we will also use `D3` to visualise results.
 
 - **Databases:** For this task we decided to go with `MySQL` running on AWS RDS and `Firestore`. Where MySQL will store all raw data used for processing, and Firestore will store data which considers the users as well as active sessions. 
+
+### Summary
+To sum up everything, here is a list of all the technologies that we will be including in our project:
+<img width="836" alt="Screen Shot 2019-04-28 at 16 21 03" src="https://user-images.githubusercontent.com/17438617/56865046-46008a80-69d2-11e9-9ee9-5c5d3ef2efc7.png">
+
+
