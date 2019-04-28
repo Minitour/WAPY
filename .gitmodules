@@ -16,3 +16,6 @@
 [submodule "wapy-backend"]
 	path = wapy-backend
 	url = https://github.com/Minitour/wapy-backend.git
+[submodule "wapy-lambda-handlers"]
+	path = wapy-lambda-handlers
+	url = https://github.com/Minitour/wapy-lambda-handlers.git
