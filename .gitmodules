@@ -21,4 +21,4 @@
 	url = https://github.com/Minitour/wapy-lambda-handlers.git
 [submodule "wapy-service-manager"]
 	path = wapy-service-manager
-	url = wapy-service-manager
+	url = https://github.com/Minitour/wapy-service-manager.git
